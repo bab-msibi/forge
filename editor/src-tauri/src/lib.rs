@@ -1,4 +1,5 @@
 mod pty;
+mod workspace;
 
 use tauri::Manager;
 
@@ -6,13 +7,22 @@ use tauri::Manager;
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_fs::init())
+        // Remembers folders picked in the dialog, so the last session can reopen them
+        .plugin(tauri_plugin_persisted_scope::init())
         .plugin(tauri_plugin_dialog::init())
         .manage(pty::PtyState::default())
+        .manage(workspace::WorkspaceState::default())
         .invoke_handler(tauri::generate_handler![
             pty::pty_spawn,
             pty::pty_write,
             pty::pty_resize,
             pty::pty_kill,
+            workspace::workspace_open,
+            workspace::workspace_files,
+            workspace::workspace_search,
+            workspace::workspace_create,
+            workspace::workspace_rename,
+            workspace::workspace_trash,
         ])
         .setup(|app| {
             if cfg!(debug_assertions) {
